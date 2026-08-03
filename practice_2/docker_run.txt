@@ -1,0 +1,11 @@
+PS C:\docker-postgres> docker run -d --name pg-hotels `
+>> -e POSTGRES_USER=datalab_user `
+>>  -e POSTGRES_PASSWORD=datalab_pass `
+>>   -e POSTGRES_DB=hotel_booking `
+>>   -p 5432:5432 `
+>> postgres:16
+88cbd0c3fc8cee6df7c68e1558ce0f308bdded2dc6345138470c1ce88b9aa554
+PS C:\docker-postgres> docker ps -a
+CONTAINER ID   IMAGE         COMMAND                  CREATED          STATUS          PORTS                                         NAMES
+88cbd0c3fc8c   postgres:16   "docker-entrypoint.s…"   14 seconds ago   Up 14 seconds   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp   pg-hotels
+d82162498736   postgres:16   "docker-entrypoint.s…"   34 minutes ago   Up 34 minutes   0.0.0.0:5436->5432/tcp, [::]:5436->5432/tcp   docker-postgres-postgres-1
