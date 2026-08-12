@@ -29,7 +29,7 @@ ORDER BY email ASC;
 --Завдання 2.5.
 SELECT employee_id, first_name, last_name, department_id
 FROM hr.employees
-WHERE department_id IN (20, 30, 50)
+WHERE department_id IN (20, 30)
 ORDER BY department_id ASC, employee_id ASC;
 
 --Завдання 2.6.
@@ -43,7 +43,7 @@ SELECT employee_id, first_name, last_name, salary, commission_pct
 FROM hr.employees
 WHERE salary > 6000
   AND commission_pct = 0.15
-ORDER BY salary ASC;
+ORDER BY salary DESC;
 
 --Завдання 2.8.
 SELECT employee_id, first_name, last_name, phone_number
@@ -302,9 +302,11 @@ SELECT
     last_name
 FROM hr.employees
 WHERE department_id IN (
-    SELECT department_id
-    FROM hr.departments
-    WHERE department_name LIKE 'S%'
+    SELECT d.department_id
+    FROM hr.departments d
+    JOIN hr.locations l
+        ON d.location_id = l.location_id
+    WHERE l.city LIKE 'S%'
 )
 ORDER BY employee_id ASC;
 
