@@ -174,6 +174,17 @@ SELECT
 FROM sales
 ORDER BY store_id, total_amount DESC, sale_id;
 
+/*
+Різниця:
+RANK() пропускає номери після однакових значень
+(наприклад: 1, 2, 2, 4),
+а DENSE_RANK() не пропускає
+(наприклад: 1, 2, 2, 3).
+
+Магазин, у якому amount_rank і amount_dense
+відрізняються, має повторювані значення total_amount.
+*/
+
 --Завдання 4.4. 
 SELECT
     sale_id,
@@ -468,7 +479,7 @@ SELECT
 FROM stock_prices
 ORDER BY stock_symbol, price_date;
 
---Завдання 7.5.
+-- Завдання 7.5.
 SELECT
     stock_symbol,
     price_date,
@@ -476,10 +487,9 @@ SELECT
     MAX(closing_price) OVER (
         PARTITION BY stock_symbol
     ) AS max_price,
-    closing_price
-        - MAX(closing_price) OVER (
-            PARTITION BY stock_symbol
-        ) AS diff_from_max
+    MAX(closing_price) OVER (
+        PARTITION BY stock_symbol
+    ) - closing_price AS diff_from_max
 FROM stock_prices
 ORDER BY stock_symbol, price_date;
 
