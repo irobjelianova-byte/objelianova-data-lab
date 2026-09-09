@@ -70,23 +70,14 @@ CREATE TABLE ecom.events (
 
 --Завдання 3.3. 
 DO $$
-DECLARE
-    d DATE;
+DECLARE d DATE;
 BEGIN
-    FOR d IN
-        SELECT generate_series(
-            '2025-01-01'::date,
-            '2025-12-01'::date,
-            '1 month'
-        )
+    FOR d IN SELECT generate_series('2025-01-01'::date, '2025-12-01'::date, '1 month')
     LOOP
         EXECUTE format(
-            'CREATE TABLE ecom.events_2025_%s PARTITION OF ecom.events
+            'CREATE TABLE ecom.events_%s PARTITION OF ecom.events
              FOR VALUES FROM (%L) TO (%L)',
-            to_char(d, 'YYYY_MM'),
-            d,
-            d + INTERVAL '1 month'
-        );
+            to_char(d, 'YYYY_MM'), d, d + INTERVAL '1 month');
     END LOOP;
 END $$;
 
@@ -95,18 +86,13 @@ PARTITION OF ecom.events DEFAULT;
 
 --Завдання 3.4
 SELECT
-    c.relname AS partition_name,
-    pg_get_expr(c.relpartbound, c.oid) AS partition_bounds
-FROM pg_inherits i
+    relid::regclass AS partition,
+    pg_get_expr(c.relpartbound, c.oid) AS bounds
+FROM pg_partition_tree('ecom.events') t
 JOIN pg_class c
-    ON c.oid = i.inhrelid
-JOIN pg_class p
-    ON p.oid = i.inhparent
-JOIN pg_namespace n
-    ON n.oid = p.relnamespace
-WHERE p.relname = 'events'
-  AND n.nspname = 'ecom'
-ORDER BY c.relname;
+    ON c.oid = t.relid
+WHERE t.isleaf
+ORDER BY 1;
 
 --Завдання 3.5
 SELECT COUNT(*) AS rows_count
@@ -175,15 +161,15 @@ CREATE INDEX idx_events_event_type
 ON ecom.events (event_type);
 
 --Завдання 6.1.
-ALTER TABLE ecom.events DETACH PARTITION ecom.events_2025_2025_01;
+ALTER TABLE ecom.events DETACH PARTITION ecom.events_2025_01;
 SELECT COUNT(*) AS events_count
 FROM ecom.events;
 SELECT COUNT(*) AS events_count
-FROM ecom.events_2025_2025_01;
+FROM ecom.events_2025_01;
 
 --Завдання 6.2
 ALTER TABLE ecom.events
-ATTACH PARTITION ecom.events_2025_2025_01
+ATTACH PARTITION ecom.events_2025_01
 FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
 SELECT COUNT(*) AS events_count
 FROM ecom.events;
@@ -222,7 +208,7 @@ FROM ecom.events
 WHERE event_time >= '2025-02-01'
   AND event_time < '2025-03-01';
 
-DROP TABLE ecom.events_2025_2025_02;
+DROP TABLE ecom.events_2025_02;
 
 SELECT COUNT(*) AS total_count
 FROM ecom.events;
@@ -237,16 +223,13 @@ CREATE TABLE ecom.timings (
 
 --Завдання 7.2
 DO $$
-DECLARE
-    t0 timestamp;
-    n bigint;
+DECLARE t0 timestamptz; n bigint;
 BEGIN
     t0 := clock_timestamp();
 
     SELECT count(*) INTO n
     FROM ecom.events
-    WHERE event_time >= '2025-03-01'
-      AND event_time < '2025-04-01';
+    WHERE event_time >= '2025-03-01' AND event_time < '2025-04-01';
 
     INSERT INTO ecom.timings (label, row_count, duration)
     VALUES ('partitioned: березень', n, clock_timestamp() - t0);
